@@ -1,6 +1,6 @@
 from .errors import ParseError
 
-HUBS_KEYS = {"zone", "color", "max_drones"}
+HUB_KEYS = {"zone", "color", "max_drones"}
 COLOR_KEYS = {"red", "green", "yellow", "blue", "grey"}
 ZONE_KEYS = {"normal", "restricted", "priority", "blocked"}
 
@@ -22,20 +22,20 @@ class StartHub(Hubs):
         self.msg = f"[ERROR] <start_hub> {name}"
         self.max = float("inf")
 
-    def check_data(self):
+    def check_data(self, msg):
         seen = set()
         if len(self.data) > 3:
-            raise ParseError(f"{self.msg} extra keys in metadata: expected three from <HUB_KEYS>")
+            raise ParseError(f"{msg} extra keys in metadata: expected three from <HUB_KEYS>")
         for x in self.data:
             k = x[0]
             v = x[1]
             if k in seen:
-                raise ParseError(f"{self.msg} duplicated key in metadata")
+                raise ParseError(f"{msg} duplicated key in metadata")
             if k not in HUB_KEYS:
-                raise ParseError(f"{self.msg} unknown key in metadata: expected <HUB_KEYS>")
+                raise ParseError(f"{msg} unknown key in metadata: expected <HUB_KEYS>")
             if k == "color":
                 if v not in COLOR_KEYS:
-                    raise ParseError(f"{self.msg} invalid metadata value: expected <COLOR_KEYS>")
+                    raise ParseError(f"{msg} invalid metadata value: expected <COLOR_KEYS>")
             seen.add(k)
 
     def extract_data(self):
@@ -50,23 +50,22 @@ class StartHub(Hubs):
 class EndHub(Hubs):
     def __init__(self, name, x, y, data):
         super().__init__(name, x, y, data)
-        self.msg = f"[ERROR] <end_hub> {name}"
         self.max = float("inf")
 
-    def check_data(self):
+    def check_data(self, msg):
         seen = set()
         if len(self.data) > 3:
-            raise ParseError(f"{self.msg} extra keys in metadata: expected three from <HUB_KEYS>")
+            raise ParseError(f"{msg} extra keys in metadata: expected three from <HUB_KEYS>")
         for x in self.data:
             k = x[0]
             v = x[1]
             if k in seen:
-                raise ParseError(f"{self.msg} duplicated key in metadata")
+                raise ParseError(f"{msg} duplicated key in metadata")
             if k not in HUB_KEYS:
-                raise ParseError(f"{self.msg} unknown key in metadata: expected <HUB_KEYS>")
+                raise ParseError(f"{msg} unknown key in metadata: expected <HUB_KEYS>")
             if k == "color":
                 if v not in COLOR_KEYS:
-                    raise ParseError(f"{self.msg} invalid metadata value: expected <COLOR_KEYS>")
+                    raise ParseError(f"{msg} invalid metadata value: expected <COLOR_KEYS>")
             seen.add(k)
     
     def extract_data(self):
@@ -80,29 +79,28 @@ class EndHub(Hubs):
 class CommonHub(Hubs):
     def __init__(self, name, x, y, data):
         super().__init__(name, x, y, data)
-        self.msg = f"[ERROR] <hub> {name}"
 
-    def check_data(self):
+    def check_data(self, msg):
         seen = set()
         if len(self.data) > 3:
-            raise ParseError(f"{self.msg} extra keys in metadata: expected three from <HUB_KEYS>")
+            raise ParseError(f"{msg} extra keys in metadata: expected three from <HUB_KEYS>")
         for x in self.data:
             k = x[0]
             v = x[1]
             if k in seen:
-                raise ParseError(f"{self.msg} duplicated key in metadata")
+                raise ParseError(f"{msg} duplicated key in metadata")
             if k not in HUB_KEYS:
-                raise ParseError(f"{self.msg} unknown key in metadata: expected <HUB_KEYS>")
+                raise ParseError(f"{msg} unknown key in metadata: expected <HUB_KEYS>")
             if k == "color":
                 if v not in COLOR_KEYS:
-                    raise ParseError(f"{self.msg} invalid metadata value: expected <COLOR_KEYS>")
+                    raise ParseError(f"{msg} invalid metadata value: expected <COLOR_KEYS>")
             elif k == "zone":
                 if v not in ZONE_KEYS:
-                    raise ParseError(f"{self.msg} invalid metadata value: expected <ZONE_KEYS>")
+                    raise ParseError(f"{msg} invalid metadata value: expected <ZONE_KEYS>")
             elif k == "max_drones":
                 v = int(v)
                 if v <= 0:
-                    raise ParseError(f"{self.msg} invalid metadata value:"
+                    raise ParseError(f"{msg} invalid metadata value:"
                                     " expected positive int for <max_drones>")
             seen.add(k)
 
@@ -115,4 +113,7 @@ class CommonHub(Hubs):
             elif k == "zone":
                 self.zone = v
             elif k == "max_drones":
-                self.max = int(v)
+                try:
+                    self.max = int(v)
+                except ValueError as e:
+                    raise ValueError(f"{msg} : {e}")

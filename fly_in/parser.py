@@ -45,31 +45,36 @@ class MapGen():
                 if line.startswith("#") or line.startswith("\n"):
                     continue
                 if line.startswith("nb_drones:"):
-                    set_nbdrones(pos, line, i)
+                    self.set_nbdrones(pos, line, i)
                     pos = 1
                 elif line.startswith("start_hub:"):
-                    set_start(pos, line, f"[ERROR] line {i}, <start_hub>")
+                    self.set_start(pos, line, f"[ERROR] line {i}, <start_hub>")
                 elif line.startswith("end_hub:"):
-                    set_end(pos, line, f"[ERROR] line {i}, <end_hub>")
+                    self.set_end(pos, line, f"[ERROR] line {i}, <end_hub>")
                 elif line.startswith("hub:"):
-                    set_hub(pos, line, f"[ERROR] line {i}, <hub>")
+                    self.set_hub(pos, line, f"[ERROR] line {i}, <hub>")
                 elif line.startswith("connection:"):
                     pos = 2
-                    set_connection(pos, line, f"[ERROR] line {i}, <connection>")
-            if not (self.nb or self.start or self.end
-                     or self.hubs or self.connections):
-                raise ParseError("[ERROR] missing map item:"
-                                " expected <nb_drones> <start_hub>"
-                                " <end_hub> <hub> <connection>")
-            self.check_repetition("[ERROR] Repetition error:")
-            self.check_coord("[ERROR] Repetition error:")
-            return self.create_map()
+                    self.set_connection(pos, line, f"[ERROR] line {i}, <connection>")
+                else:
+                    raise ParseError(f"[ERROR] line {i}, unknown item in map")
+        if not self.nb or not self.start or not self.end
+             or not self.hubs or not self.connections:
+            raise ParseError("[ERROR] missing map item:"
+                            " expected <nb_drones> <start_hub>"
+                            " <end_hub> <hub> <connection>")
+        self.check_repetition("[ERROR] Repetition error:")
+        self.check_coord("[ERROR] Repetition error:")
+        return self.create_map()
 
     def set_nbdrones(self, p, l, i):
         if p != 0:
             raise ParseError(f"[ERROR] line {i}, <nb_drones> must be declared first")
         n = l.split(":")[1]
-        n = int(n)
+        try:
+            n = int(n)
+        except ValueError as e:
+            raise ValueError(f"{msg} : {e}")
         self.nb.append(n)
         if len(self.nb) > 1:
             raise ParseError(f"[ERROR] line {i}, <nb_drones> repetition found")
@@ -86,10 +91,15 @@ class MapGen():
         name = info[0]
         if name.find("-") != -1:
             raise ParseError(f"{msg} invalid name: '-' are forbidden")
-        x = int(info[1])
-        y = int(info[2])
-        metadata = h_metadata_parser(info[3], msg)
-        start: StartHub = StartHub(name, x, y, metadata) 
+        try:
+            x = int(info[1])
+            y = int(info[2])
+        except ValueError as e:
+            raise ValueError(f"{msg} : {e}")
+        metadata = self.h_metadata_parser(info[:2], msg)
+        start: StartHub = StartHub(name, x, y, metadata)
+        start.check_data(msg)
+        start.extract_data()
         self.start.append(start)
         self.hubs_name.append(start.name)
         if len(self.start) > 1:
@@ -105,10 +115,15 @@ class MapGen():
         name = info[0]
         if name.find("-") != -1:
             raise ParseError(f"{msg} invalid name: '-' are forbidden")
-        x = int(info[1])
-        y = int(info[2])
-        metadata = h_metadata_parser(info[3], msg)
+        try:
+            x = int(info[1])
+            y = int(info[2])
+        except ValueError as e:
+            raise ValueError(f"{msg} : {e}")
+        metadata = self.h_metadata_parser(info[:2], msg)
         end: EndHub = EndHub(name, x, y, metadata)
+        end.check_data(msg)
+        end.extract_data()
         self.end.append(end)
         self.hubs_name.append(end.name)
         if len(self.end) > 1:
@@ -124,14 +139,19 @@ class MapGen():
         name = info[0]
         if name.find("-") != -1:
             raise ParseError(f"{msg} invalid name: '-' are forbidden")
-        x = int(info[1])
-        y = int(info[2])
-        metadata = h_metadata_parser(info[3], msg)
+        try:
+            x = int(info[1])
+            y = int(info[2])
+        except ValueError as e:
+            raise ValueError(f"{msg} : {e}")
+        metadata = self.h_metadata_parser(info[:2], msg)
         hub: CommonHub = CommonHub(name, x, y, metadata) 
+        hub.check_data(msg)
+        hub.extract_data()
         self.hubs.append(hub)
         self.hubs_name.append(hub.name)
 
-    def set_connection(self, p, l, msg)
+    def set_connection(self, p, l, msg):
         if p != 2:
             raise ParseError(f"{msg} in wrong position:"
                             " expected order <nb_drones> <hubs> <connections>")
@@ -142,11 +162,13 @@ class MapGen():
         if name.find("-") == -1:
             raise ParseError(f"{msg} invalid name: expected syntax <name1>-<name2>")
         name = info[0].split("-")
-        if name[0] not in self.hubs_name or name[1] not in hubs_name:
+        if not (name[0] in self.hubs_name or name[1] in self.hubs_name):
             raise ParseError(f"{msg} invalid name: expected hubs names")
         if len(info) > 1:
-            metadata = c_metadata_parser(info[3], msg)
-        connection: Connection = Connection(name[0], name[1], metadata) 
+            metadata = self.c_metadata_parser(info[:0], msg)
+        connection: Connection = Connection(name[0], name[1], metadata)
+        connection.check_data(msg)
+        connection.extract_data()
         self.connections.append(connection)
 
     def h_metadata_parser(self, data, msg):
@@ -188,39 +210,28 @@ class MapGen():
         return parsed
 
     def create_map(self):
-        nb = self.nb[0]
-        start = self.start[0]
-        if start.data:
-            start.check_data()
-            start.extract_data()
-        end = self.end[0]
-        if end.data:
-            end.check_data()
-            end.extract_data()
-        for h in hubs:
-            if h.data:
-                h.check_data()
-                h.extract_data()
-        for c in connections:
-            if c.data:
-                c.check_data()
-                c.extract_data()
-        map = Map(nb, start, end, hubs, connections)
-        return map
+        nb_map = self.nb[0]
+        start_map = self.start[0]
+        mymap = Map(self.nb[0],
+                 self.start[0],
+                 self.end[0],
+                 self.hubs,
+                 self.connections)
+        return mymap
 
     def check_coord(self, msg):
         seen = set()
         for h in self.hubs:
-            if h.x, h.y in seen:
+            if (h.x, h.y) in seen:
                 raise ParseError(f"{msg} found same coords for different hubs")
             else:
-                seen.add(h.x, h.y)
+                seen.add((h.x, h.y))
 
     def check_repetition(self, msg):
         seen_s = set()
         seen_d: dict = {}
-        if self.start[0].x == self.end[0].x
-            and self.start[0].y == self.end[0].y:
+        if (self.start[0].x == self.end[0].x)
+            and (self.start[0].y == self.end[0].y):
             raise ParseError(f"{msg} found same coords for start and end")
         for n in self.hubs_name:
             if n in seen_s:
@@ -229,7 +240,7 @@ class MapGen():
                 seen_s.add(n)
         for c in self.connections:
             if c.name1, c.name2 in seen_d and c.name2, c.name1 in seen_d:
-                raise ParseError(f"{msg} found same names
-                                 {c.name1}-{c.name2} for connections")
+                raise ParseError(f"{msg} found same names"
+                                f" {c.name1}-{c.name2} for connections")
             else:
                 seen_d[c.name1] = c.name2
