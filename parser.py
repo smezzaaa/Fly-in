@@ -53,6 +53,7 @@ class MapGen():
                 elif line.startswith("hub:"):
                     set_hub(pos, line, f"[ERROR] line {i}, <hub>")
                 elif line.startswith("connection:")
+                    p += 1
                     set_connection(pos, line, f"[ERROR] line {i}, <connection>")
             check_repetition("[ERROR] Repetition error:")
             check_coord("[ERROR] Repetition error:")
