@@ -10,7 +10,15 @@
 #                                                                              #
 # **************************************************************************** #
 
+from fly_in import ParseError, MapGen
+
 def main():
 	path = "maps/easy/01_linear_path.txt"
-	with open(path, "r") as file:
-		map = create_map(file)
+	try:
+		map = MapGen(path).parser()
+	except ParseError as e:
+		print(f"{e}")
+	except ValueError as e:
+		print(f"{e}")
+	except FileNotFoundError as e:
+		print(f"{e}")
