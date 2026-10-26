@@ -1,119 +1,82 @@
+"""Hub models and metadata validation."""
+
 from .errors import ParseError
 
 HUB_KEYS = {"zone", "color", "max_drones"}
-COLOR_KEYS = {"red", "green", "yellow", "blue", "grey"}
-ZONE_KEYS = {"normal", "restricted", "priority", "blocked"}
+ZONE_KEYS = {"normal", "blocked", "restricted", "priority"}
+COLOR_KEYS = {"green", "blue", "white", "red"}
 
 
-class Hubs():
-    def __init__(self, name, x, y, data: list | None):
+class Hubs:
+    def __init__(self, name, x, y, data=None):
         self.name = name
         self.x = x
         self.y = y
-        self.color = "grey"
+        self.color = "none"
         self.zone = "normal"
         self.max = 1
-        self.data = data
+        self.data = data or []
+
+    def _validate_metadata(self, msg, unlimited_capacity=False):
+        seen = set()
+        for key, value in self.data:
+            if key in seen:
+                raise ParseError(f"{msg}: duplicated metadata key")
+            if key not in HUB_KEYS:
+                raise ParseError(f"{msg}: unknown metadata key")
+            seen.add(key)
+            if key == "zone" and value not in ZONE_KEYS:
+                raise ParseError(f"{msg}: invalid zone type")
+            elif key == "color" and value not in COLOR_KEYS:
+                raise ParseError(f"{msg}: invalid color type")
+            # Capacity metadata on start/end is explicitly ignored, including its value.
+            if key == "max_drones" and not unlimited_capacity:
+                try:
+                    capacity = int(value)
+                except ValueError as error:
+                    raise ParseError(
+                        f"{msg}: max_drones must be a positive integer"
+                    ) from error
+                if capacity <= 0:
+                    raise ParseError(f"{msg}: max_drones must be a positive integer")
+
+    def _extract_metadata(self, unlimited_capacity=False):
+        for key, value in self.data:
+            if key == "zone":
+                self.zone = value
+            elif key == "color":
+                self.color = value
+            elif key == "max_drones" and not unlimited_capacity:
+                self.max = int(value)
 
 
 class StartHub(Hubs):
-    def __init__(self, name, x, y, data):
+    def __init__(self, name, x, y, data=None):
         super().__init__(name, x, y, data)
-        self.msg = f"[ERROR] <start_hub> {name}"
         self.max = float("inf")
 
     def check_data(self, msg):
-        seen = set()
-        if len(self.data) > 3:
-            raise ParseError(f"{msg} extra keys in metadata: expected three from <HUB_KEYS>")
-        for x in self.data:
-            k = x[0]
-            v = x[1]
-            if k in seen:
-                raise ParseError(f"{msg} duplicated key in metadata")
-            if k not in HUB_KEYS:
-                raise ParseError(f"{msg} unknown key in metadata: expected <HUB_KEYS>")
-            if k == "color":
-                if v not in COLOR_KEYS:
-                    raise ParseError(f"{msg} invalid metadata value: expected <COLOR_KEYS>")
-            seen.add(k)
+        self._validate_metadata(msg, unlimited_capacity=True)
 
     def extract_data(self):
-        for x in self.data:
-            k = x[0]
-            v = x[1]
-            if k == "color":
-                self.color = v
-
+        self._extract_metadata(unlimited_capacity=True)
 
 
 class EndHub(Hubs):
-    def __init__(self, name, x, y, data):
+    def __init__(self, name, x, y, data=None):
         super().__init__(name, x, y, data)
         self.max = float("inf")
 
     def check_data(self, msg):
-        seen = set()
-        if len(self.data) > 3:
-            raise ParseError(f"{msg} extra keys in metadata: expected three from <HUB_KEYS>")
-        for x in self.data:
-            k = x[0]
-            v = x[1]
-            if k in seen:
-                raise ParseError(f"{msg} duplicated key in metadata")
-            if k not in HUB_KEYS:
-                raise ParseError(f"{msg} unknown key in metadata: expected <HUB_KEYS>")
-            if k == "color":
-                if v not in COLOR_KEYS:
-                    raise ParseError(f"{msg} invalid metadata value: expected <COLOR_KEYS>")
-            seen.add(k)
-    
+        self._validate_metadata(msg, unlimited_capacity=True)
+
     def extract_data(self):
-        for x in self.data:
-            k = x[0]
-            v = x[1]
-            if k == "color":
-                self.color = v
+        self._extract_metadata(unlimited_capacity=True)
 
 
 class CommonHub(Hubs):
-    def __init__(self, name, x, y, data):
-        super().__init__(name, x, y, data)
-
     def check_data(self, msg):
-        seen = set()
-        if len(self.data) > 3:
-            raise ParseError(f"{msg} extra keys in metadata: expected three from <HUB_KEYS>")
-        for x in self.data:
-            k = x[0]
-            v = x[1]
-            if k in seen:
-                raise ParseError(f"{msg} duplicated key in metadata")
-            if k not in HUB_KEYS:
-                raise ParseError(f"{msg} unknown key in metadata: expected <HUB_KEYS>")
-            if k == "color":
-                if v not in COLOR_KEYS:
-                    raise ParseError(f"{msg} invalid metadata value: expected <COLOR_KEYS>")
-            elif k == "zone":
-                if v not in ZONE_KEYS:
-                    raise ParseError(f"{msg} invalid metadata value: expected <ZONE_KEYS>")
-            elif k == "max_drones":
-                v = int(v)
-                if v <= 0:
-                    raise ParseError(f"{msg} invalid metadata value:"
-                                    " expected positive int for <max_drones>")
-            seen.add(k)
+        self._validate_metadata(msg)
 
     def extract_data(self):
-        for x in self.data:
-            k = x[0]
-            v = x[1]
-            if k == "color":
-                self.color = v
-            elif k == "zone":
-                self.zone = v
-            elif k == "max_drones":
-                try:
-                    self.max = int(v)
-                except ValueError as e:
-                    raise ValueError(f"{msg} : {e}")
+        self._extract_metadata()

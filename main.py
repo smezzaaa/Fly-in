@@ -10,7 +10,7 @@
 #                                                                              #
 # **************************************************************************** #
 
-from fly_in import ParseError, MapGen, MyValueError
+from fly_in import ParseError, MapGen
 
 def main():
 	path = "maps/easy/01_linear_path.txt"

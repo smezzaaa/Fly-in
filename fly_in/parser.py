@@ -14,13 +14,13 @@ from .connections import Connection
 from .errors import ParseError
 from .hubs import CommonHub, EndHub, StartHub
 
-class Map():
+class Map:
     def __init__(self,
-                nb_drones,
-                start,
-                end,
-                hubs,
-                connections):
+                 nb_drones,
+                 start,
+                 end,
+                 hubs,
+                 connections):
         self.nb_drones = nb_drones
         self.start = start
         self.end = end
@@ -28,7 +28,7 @@ class Map():
         self.connections = connections
 
 
-class MapGen():
+class MapGen:
     def __init__(self, path):
         self.path = path
         self.nb = []
@@ -42,24 +42,24 @@ class MapGen():
         pos = 0
         with open(self.path, "r") as f:
             for i, line in enumerate(f):
-                if line.startswith("#") or line.startswith("\n"):
+                if line.strip().startswith("#") or not line.strip():
                     continue
-                if line.startswith("nb_drones:"):
+                if line.strip().startswith("nb_drones:"):
                     self.set_nbdrones(pos, line, i)
                     pos = 1
-                elif line.startswith("start_hub:"):
+                elif line.strip().startswith("start_hub:"):
                     self.set_start(pos, line, f"[ERROR] line {i}, <start_hub>")
-                elif line.startswith("end_hub:"):
+                elif line.strip().startswith("end_hub:"):
                     self.set_end(pos, line, f"[ERROR] line {i}, <end_hub>")
-                elif line.startswith("hub:"):
+                elif line.strip().startswith("hub:"):
                     self.set_hub(pos, line, f"[ERROR] line {i}, <hub>")
-                elif line.startswith("connection:"):
+                elif line.strip().startswith("connection:"):
                     pos = 2
                     self.set_connection(pos, line, f"[ERROR] line {i}, <connection>")
                 else:
                     raise ParseError(f"[ERROR] line {i}, unknown item in map")
-        if not self.nb or not self.start or not self.end
-             or not self.hubs or not self.connections:
+        if (not self.nb or not self.start or not self.end
+             or not self.hubs or not self.connections):
             raise ParseError("[ERROR] missing map item:"
                             " expected <nb_drones> <start_hub>"
                             " <end_hub> <hub> <connection>")
@@ -74,7 +74,7 @@ class MapGen():
         try:
             n = int(n)
         except ValueError as e:
-            raise ValueError(f"{msg} : {e}")
+            raise ValueError(f"[ERROR] line {i} : {e}")
         self.nb.append(n)
         if len(self.nb) > 1:
             raise ParseError(f"[ERROR] line {i}, <nb_drones> repetition found")
@@ -85,9 +85,12 @@ class MapGen():
         if p != 1:
             raise ParseError(f"{msg} in wrong position:"
                             " expected order <nb_drones> <hubs> <connections>")
+        metadata = []
         info = l.split(":")[1]
         info = info.strip()
         info = info.split()
+        if len(info) < 3:
+            raise ParseError(f"{msg} incomplete: expected name and two coordinates")
         name = info[0]
         if name.find("-") != -1:
             raise ParseError(f"{msg} invalid name: '-' are forbidden")
@@ -96,10 +99,12 @@ class MapGen():
             y = int(info[2])
         except ValueError as e:
             raise ValueError(f"{msg} : {e}")
-        metadata = self.h_metadata_parser(info[:2], msg)
+        if len(info) > 3:
+            metadata = self.h_metadata_parser(" ".join(info[3:]), msg)
         start: StartHub = StartHub(name, x, y, metadata)
-        start.check_data(msg)
-        start.extract_data()
+        if metadata:
+            start.check_data(msg)
+            start.extract_data()
         self.start.append(start)
         self.hubs_name.append(start.name)
         if len(self.start) > 1:
@@ -109,7 +114,10 @@ class MapGen():
         if p != 1:
             raise ParseError(f"{msg} in wrong position:"
                             " expected order <nb_drones> <hubs> <connections>")
+        metadata = []
         info = l.split(":")[1]
+        if len(info) < 3:
+            raise ParseError(f"{msg} incomplete: expected name and two coordinates")
         info = info.strip()
         info = info.split()
         name = info[0]
@@ -120,10 +128,12 @@ class MapGen():
             y = int(info[2])
         except ValueError as e:
             raise ValueError(f"{msg} : {e}")
-        metadata = self.h_metadata_parser(info[:2], msg)
+        if len(info) > 3:
+            metadata = self.h_metadata_parser(" ".join(info[3:]), msg)
         end: EndHub = EndHub(name, x, y, metadata)
-        end.check_data(msg)
-        end.extract_data()
+        if metadata:
+            end.check_data(msg)
+            end.extract_data()
         self.end.append(end)
         self.hubs_name.append(end.name)
         if len(self.end) > 1:
@@ -133,9 +143,12 @@ class MapGen():
         if p != 1:
             raise ParseError(f"{msg} in wrong position:"
                             " expected order <nb_drones> <hubs> <connections>")
+        metadata = []
         info = l.split(":")[1]
         info = info.strip()
         info = info.split()
+        if len(info) < 3:
+            raise ParseError(f"{msg} incomplete: expected name and two coordinates")
         name = info[0]
         if name.find("-") != -1:
             raise ParseError(f"{msg} invalid name: '-' are forbidden")
@@ -144,10 +157,12 @@ class MapGen():
             y = int(info[2])
         except ValueError as e:
             raise ValueError(f"{msg} : {e}")
-        metadata = self.h_metadata_parser(info[:2], msg)
-        hub: CommonHub = CommonHub(name, x, y, metadata) 
-        hub.check_data(msg)
-        hub.extract_data()
+        if len(info) > 3:
+            metadata = self.h_metadata_parser(" ".join(info[3:]), msg)
+        hub: CommonHub = CommonHub(name, x, y, metadata)
+        if metadata:
+            hub.check_data(msg)
+            hub.extract_data()
         self.hubs.append(hub)
         self.hubs_name.append(hub.name)
 
@@ -155,17 +170,19 @@ class MapGen():
         if p != 2:
             raise ParseError(f"{msg} in wrong position:"
                             " expected order <nb_drones> <hubs> <connections>")
+        metadata = []
         info = l.split(":")[1]
         info = info.strip()
         info = info.split()
-        name = info[0]
-        if name.find("-") == -1:
-            raise ParseError(f"{msg} invalid name: expected syntax <name1>-<name2>")
+        if not info:
+            raise ParseError(f"{msg} incomplete: expected name")
         name = info[0].split("-")
-        if not (name[0] in self.hubs_name or name[1] in self.hubs_name):
+        if len(name) != 2:
+            raise ParseError(f"{msg} invalid name: expected syntax <name1>-<name2>")
+        if not (name[0] in self.hubs_name and name[1] in self.hubs_name):
             raise ParseError(f"{msg} invalid name: expected hubs names")
         if len(info) > 1:
-            metadata = self.c_metadata_parser(info[:0], msg)
+            metadata = self.c_metadata_parser(" ".join(info[1:]), msg)
         connection: Connection = Connection(name[0], name[1], metadata)
         connection.check_data(msg)
         connection.extract_data()
@@ -173,9 +190,10 @@ class MapGen():
 
     def h_metadata_parser(self, data, msg):
         parsed = []
+        data = data.strip()
         fb = data.find("[")
         sb = data.find("]")
-        if fb == -1 or sb == -1:
+        if fb == -1 and sb == -1:
             raise ParseError(f"{msg} invalid metadata syntax:"
                             " expected '[]'")
         if not (data.startswith("[") or data.endswith("]")):
@@ -202,7 +220,7 @@ class MapGen():
             raise ParseError(f"{msg} invalid metadata syntax:"
                             " found data out of brackets")
         data = data.strip("[]")
-        k_v = x.split("=")
+        k_v = data.split("=")
         if len(k_v) != 2:
             raise ParseError(f"{msg} invalid metadata syntax:"
                             " expected <CONNECTION_KEYS>=<VALUE>")
@@ -228,19 +246,19 @@ class MapGen():
                 seen.add((h.x, h.y))
 
     def check_repetition(self, msg):
-        seen_s = set()
-        seen_d: dict = {}
-        if (self.start[0].x == self.end[0].x)
-            and (self.start[0].y == self.end[0].y):
+        seen_h = set()
+        seen_c = set()
+        if (self.start[0].x == self.end[0].x
+            and self.start[0].y == self.end[0].y):
             raise ParseError(f"{msg} found same coords for start and end")
         for n in self.hubs_name:
-            if n in seen_s:
+            if n in seen_h:
                 raise ParseError(f"{msg} found same name {n} for hubs")
             else:
-                seen_s.add(n)
+                seen_h.add(n)
         for c in self.connections:
-            if c.name1, c.name2 in seen_d and c.name2, c.name1 in seen_d:
+            pair = frozenset((c.name1, c.name2))
+            if pair in seen_c:
                 raise ParseError(f"{msg} found same names"
                                 f" {c.name1}-{c.name2} for connections")
-            else:
-                seen_d[c.name1] = c.name2
+            seen_c.add(pair)

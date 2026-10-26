@@ -1,7 +1,7 @@
 class ParseError(Exception):
     def __init__(self, msg: str):
         self.msg = msg
-        super().__init__(f"{msg}!\n")
+        super().__init__(f"{msg}!")
 
 class MyValueError(ValueError):
     def __init__(self, msg: str):
