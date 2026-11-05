@@ -1,10 +1,12 @@
 from .errors import ParseError
 
 class Connection:
-    def __init__(self, name1, name2, data=None):
-        self.name1 = name1
-        self.name2 = name2
-        self.capacity = 1
+    def __init__(self, a, b, data=None):
+        self.a = a
+        self.b = b
+        self.max_c = 1
+        self.capacity = 0
+        self.available = True
         self.data = data or []
 
     def check_data(self, msg):
@@ -23,9 +25,14 @@ class Connection:
         if cap <= 0:
             raise ParseError(f"{msg} invalid metadata value:"
                             " expected positive int for <max_link_capacity>")
-    
+
     def extract_data(self):
         if not self.data:
             return
         x = self.data[0]
-        self.capacity = int(x[1])
+        self.max_c = int(x[1])
+
+    def is_available(self):
+        if self.capacity == self.max_c:
+            self.available = False
+        return self.available
