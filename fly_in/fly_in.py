@@ -8,9 +8,10 @@ def let_em_fly(map, drones):
             new_path = d.get_new_path()
             best_path(d)
             for h in d.path():
-                if not h.available or h.:
-
-                d.pos = h
+                if not h.available:
+                    d.pos = h.connection.add()
+                else:
+                    d.pos = h.add()
 
 def stop_fleet(map):
     for d in map.drones:

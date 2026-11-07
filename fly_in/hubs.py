@@ -16,6 +16,7 @@ class Hub:
         self.max_c = 1
         self.capacity = 0
         self.available = True
+        self.connection = set()
         self.data = data or []
         self.n_hubs = set()
         self.t_cost = 1.0
@@ -64,13 +65,15 @@ class Hub:
             self.cost = 2.0
         return self.g_cost + self.h_cost + self.t_cost
 
-    def connect_to(self, msg, n_hub):
-        if self.name == n_hub.name:
+    def connect_to(self, msg, n, connection):
+        if self.name == n.name:
             raise ParseError(f"{msg} invalid connection: expected 2 different names")
-        if self.blocked or n_hub.blocked:
+        if self.blocked or n.blocked:
             return
-        self.n_hubs.add(n_hub)
-        n_hub.n_hubs.add(self)
+        self.n_hubs.add(n)
+        self.connection.add(connection)
+        n.n_hubs.add(self)
+        n.connection.add(connection)
 
     def get_neighbour(self):
         return self.n_hubs.copy()
@@ -79,6 +82,9 @@ class Hub:
         if self.capacity == self.max_c:
             self.available = False
         return self.available
+
+    def add_drone(self):
+        self.capacity += 1
 
 
 class StartHub(Hub):

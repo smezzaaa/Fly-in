@@ -235,7 +235,7 @@ class MapGen:
                  self.hubs,
                  self.connections)
         for c in self.connections:
-            c.a.connect_to("[ERROR] <connections>", c.b)
+            c.a.connect_to("[ERROR] <connections>", c.b, c)
         return mymap
 
     def check_coord(self, msg):

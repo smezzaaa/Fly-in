@@ -36,3 +36,6 @@ class Connection:
         if self.capacity == self.max_c:
             self.available = False
         return self.available
+
+    def add_drone(self):
+        self.capacity += 1
