@@ -1,4 +1,4 @@
-from .errors import ParseError
+from .errors import ParseError, MapError
 
 class Connection:
     def __init__(self, a, b, data=None):
@@ -39,3 +39,5 @@ class Connection:
 
     def add_drone(self):
         self.capacity += 1
+        if self.capacity > self.max_c:
+            raise MapError(f"[ERROR] too many drones on connection <{self.a}>-<{self.b}>")

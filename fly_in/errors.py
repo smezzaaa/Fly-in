@@ -3,7 +3,7 @@ class ParseError(Exception):
         self.msg = msg
         super().__init__(f"{msg}!")
 
-class MyValueError(ValueError):
+class MapError(Exception):
     def __init__(self, msg: str):
         self.msg = msg
-        super().__init__(f"{msg}!\n")
+        super().__init__(f"{msg}!")

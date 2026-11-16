@@ -1,5 +1,5 @@
 from .hubs import Hub, StartHub, EndHub
-from .errors import ParseError
+from .errors import ParseError, MapError
 from .connections import Connection
 from .parser import MapGen
 from .map import Map
@@ -12,4 +12,5 @@ __all__ = ["Hub",
             "Connection",
             "Map",
             "MapGen",
-            "Drone"]
+            "Drone",
+            "MapError"]

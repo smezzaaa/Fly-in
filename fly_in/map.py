@@ -24,6 +24,13 @@ class Map:
         for d in self.drones:
             print(f"Drone n.{d.id}, coord{d.coord}")
 
+    def initialize_hub_cost(self):
+        for h in self.hubs:
+            if h.zone == "priority":
+                h.t_cost = 0.9
+            if h.zone == "restricted":
+                h.t_cost = 2.0
+
     def get_path(self):
         path = a_star(self.start, self.end)
         for x in path:

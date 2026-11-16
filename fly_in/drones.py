@@ -9,7 +9,7 @@ class Drone():
         self.pos = pos
     
     def get_new_path(self):
-        self.path.append(a_star(self.pos, self.goal))
+        self.path = (a_star(self.pos, self.goal, self.id))
         return self.path
 
     def has_landed(self):

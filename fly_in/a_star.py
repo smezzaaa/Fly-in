@@ -22,7 +22,19 @@ def retrace_path(start: Hub, end: Hub) -> list[Hub]:
     return(path)
 
 
-def a_star(start: StartHub, end: EndHub) -> list[Hub]:
+#def space_time_path(path, curr, start, id):
+#    count = 0
+#    if curr == start:
+#        count += id
+#    elif curr.t_cost <= 1.0:
+#        count += 1
+#    elif curr.t_cost == 2.0:
+#        count += 2
+#    for i in range(0, count):
+#        path.append(curr)
+
+
+def a_star(start: StartHub, end: EndHub, id: int) -> list[Hub]:
     logged: list[Hub] = []
     seen: list[Hub] = []
     logged.append(start)
@@ -35,6 +47,7 @@ def a_star(start: StartHub, end: EndHub) -> list[Hub]:
                         and (x.h_cost < curr.h_cost)):
                 curr = x
         logged.remove(curr)
+        #space_time_path(seen, curr, start, id)
         seen.append(curr)
         if (curr == end):
             return(retrace_path(start, end))
@@ -45,8 +58,10 @@ def a_star(start: StartHub, end: EndHub) -> list[Hub]:
             temp_path = curr.g_cost + 1
             if n not in logged or (temp_path < n.g_cost):
                 n.g_cost = temp_path
-                n.h = get_distance(n, end)
+                n.h_cost = get_distance(n, end)
                 n.parent = curr  # type: ignore
                 if n not in logged:
                     logged.append(n)
+    for i in range(0, id):
+        seen.insert(0, start)
     return(seen)

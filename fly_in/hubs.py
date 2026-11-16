@@ -1,6 +1,6 @@
 """Hub models and metadata validation."""
 
-from .errors import ParseError
+from .errors import ParseError, MapError
 
 HUB_KEYS = {"zone", "color", "max_drones"}
 ZONE_KEYS = {"normal", "blocked", "restricted", "priority"}
@@ -14,15 +14,17 @@ class Hub:
         self.color = "none"
         self.zone = "normal"
         self.max_c = 1
-        self.capacity = 0
-        self.available = True
-        self.connection = set()
+        #self.capacity = 0
+        #self.available = True
+        self.status = {}
         self.data = data or []
+        self.connection = set()
         self.n_hubs = set()
         self.t_cost = 1.0
         self.h_cost = float("inf")
-        self.g_cost = 0
+        self.g_cost = 0.0
         self.blocked = False
+        self.parent = None
 
     def validate_metadata(self, msg, unlimited_capacity=False):
         seen = set()
@@ -59,11 +61,7 @@ class Hub:
                 self.max_c = int(value)
 
     def get_cost(self):
-        if self.zone == "priority":
-            self.t_cost = 0.9
-        if self.zone == "restricted":
-            self.cost = 2.0
-        return self.g_cost + self.h_cost + self.t_cost
+        return self.g_cost + self.h_cost
 
     def connect_to(self, msg, n, connection):
         if self.name == n.name:
@@ -85,6 +83,8 @@ class Hub:
 
     def add_drone(self):
         self.capacity += 1
+        if self.capacity > self.max_link_capacity:
+            raise MapError(f"[ERROR] too many drones on hub <{self.name}>>")
 
 
 class StartHub(Hub):

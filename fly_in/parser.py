@@ -236,6 +236,7 @@ class MapGen:
                  self.connections)
         for c in self.connections:
             c.a.connect_to("[ERROR] <connections>", c.b, c)
+        mymap.initialize_hub_cost()
         return mymap
 
     def check_coord(self, msg):
