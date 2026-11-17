@@ -19,10 +19,8 @@ class Map:
         self.connections: list[Connection] = connections
 
     def create_drones(self):
-        for i in range (1, self.nb_drones):
-            self.drones.append(Drone(self.end, i, self.start.coord, self.start))
-        for d in self.drones:
-            print(f"Drone n.{d.id}, coord{d.coord}")
+        for i in range (0, self.nb_drones):
+            self.drones.append(Drone(self.start, self.end, i, self.start.coord, (0, self.start)))
 
     def initialize_hub_cost(self):
         for h in self.hubs:
@@ -30,8 +28,3 @@ class Map:
                 h.t_cost = 0.9
             if h.zone == "restricted":
                 h.t_cost = 2.0
-
-    def get_path(self):
-        path = a_star(self.start, self.end)
-        for x in path:
-            print(f"{x.name}")

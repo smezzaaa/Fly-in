@@ -4,7 +4,7 @@ from .errors import ParseError, MapError
 
 HUB_KEYS = {"zone", "color", "max_drones"}
 ZONE_KEYS = {"normal", "blocked", "restricted", "priority"}
-COLOR_KEYS = {"green", "blue", "white", "red", "yellow", "orange"}
+COLOR_KEYS = {"green", "blue", "white", "red", "yellow", "orange", "cyan", "purple", "brown", "lime", "magenta", "gold"}
 
 
 class Hub:
@@ -14,9 +14,9 @@ class Hub:
         self.color = "none"
         self.zone = "normal"
         self.max_c = 1
-        #self.capacity = 0
+        self.capacity = 0
         #self.available = True
-        self.status = {}
+        self.status = []
         self.data = data or []
         self.connection = set()
         self.n_hubs = set()
@@ -60,9 +60,6 @@ class Hub:
             elif key == "max_drones" and not unlimited_capacity:
                 self.max_c = int(value)
 
-    def get_cost(self):
-        return self.g_cost + self.h_cost
-
     def connect_to(self, msg, n, connection):
         if self.name == n.name:
             raise ParseError(f"{msg} invalid connection: expected 2 different names")
@@ -73,18 +70,31 @@ class Hub:
         n.n_hubs.add(self)
         n.connection.add(connection)
 
-    def get_neighbour(self):
-        return self.n_hubs.copy()
+    def is_full_at(self, turn):
+        if not self.status:
+            return False
+        for t in self.status:
+            if not turn in t or self.capacity < self.max_c:
+                return False
+        return True
 
-    def is_available(self):
-        if self.capacity == self.max_c:
-            self.available = False
-        return self.available
+    def exit_drone(self):
+        self.capacity -= 1
 
     def add_drone(self):
         self.capacity += 1
-        if self.capacity > self.max_link_capacity:
-            raise MapError(f"[ERROR] too many drones on hub <{self.name}>>")
+        return self.capacity
+
+    def get_connection(self, neighbour):
+        for c in self.connection:
+            if c.a == neighbour or c.b == neighbour:
+                return c
+
+    def get_cost(self):
+        return self.g_cost + self.h_cost + self.t_cost
+
+    def get_neighbour(self):
+        return self.n_hubs.copy()
 
 
 class StartHub(Hub):

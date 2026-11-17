@@ -6,7 +6,8 @@ class Connection:
         self.b = b
         self.max_c = 1
         self.capacity = 0
-        self.available = True
+        #self.available = True
+        self.status = []
         self.data = data or []
 
     def check_data(self, msg):
@@ -37,7 +38,9 @@ class Connection:
             self.available = False
         return self.available
 
+    def exit_drone(self):
+        self.capacity -= 1
+
     def add_drone(self):
         self.capacity += 1
-        if self.capacity > self.max_c:
-            raise MapError(f"[ERROR] too many drones on connection <{self.a}>-<{self.b}>")
+        return self.capacity

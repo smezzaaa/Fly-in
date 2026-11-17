@@ -10,18 +10,14 @@
 #                                                                              #
 # **************************************************************************** #
 
-from fly_in import ParseError, MapGen, Map, MapError
+from fly_in import ParseError, MapGen, Map, MapError, fly_in, Drone
 
 def main():
-	path = "maps/easy/03_basic_capacity.txt"
+	path = "maps/hard/03_ultimate_challenge.txt"
 	try:
 		mymap = MapGen(path).parser()
 		mymap.create_drones()
-		for d in mymap.drones:
-			path = d.get_new_path()
-			print(f"Drone {d.id}:")
-			for h in path:
-				print(f"{h.name}")
+		fly_in(mymap.drones)
 	except ParseError as e:
 		print(f"{e}")
 	except MapError as e:
