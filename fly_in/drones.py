@@ -10,23 +10,6 @@ class Drone():
         self.path = {}
         self.status = {}
 
-    def space_time_path(self, nb_drones):
-        st_path = []
-        for curr in self.path:
-            count = 0
-            if curr == self.start:
-                count += self.id + 1
-            if curr == self.goal:
-                count = nb_drones - self.id
-            else:
-                count += 1
-            #elif curr.t_cost == 2.0:
-            #    count += 2             non mi serve visto che la tabella st la scrivo su drone_scheduler
-
-            for i in range(0, count):
-                st_path.append(curr)
-        return st_path
-
     def booking_hub(self):
         for i, (curr, t) in enumerate(self.path):
             if curr is self.start or curr is self.goal:

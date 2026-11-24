@@ -4,7 +4,7 @@ from .errors import ParseError, MapError
 
 HUB_KEYS = {"zone", "color", "max_drones"}
 ZONE_KEYS = {"normal", "blocked", "restricted", "priority"}
-COLOR_KEYS = {"green", "blue", "white", "red", "yellow", "orange", "cyan", "purple", "brown", "lime", "magenta", "gold"}
+COLOR_KEYS = {"crimson", "violet", "rainbow", "darkred", "maroon", "black", "green", "blue", "white", "red", "yellow", "orange", "cyan", "purple", "brown", "lime", "magenta", "gold"}
 
 
 class Hub:
@@ -73,9 +73,6 @@ class Hub:
 
     def book(self, t):
         self.status[t] = self.status.get(t, 0) + 1
-
-    def unbook(self, t):           # serve solo per la ricerca locale
-        self.status[t] -= 1
 
     def get_connection(self, neighbour):
         for c in self.connection:

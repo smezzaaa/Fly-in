@@ -29,10 +29,6 @@ def calculate_t(n, curr_t, curr):
         return curr_t + 1
 
 
-def is_waiting(n, curr):
-    return n == curr
-
-
 def a_star(start: StartHub, end: EndHub, d) -> list[Hub]:
     #print("=== NEIGHBOURS ===")
     logged: list[tuple] = []

@@ -1,23 +1,29 @@
-# **************************************************************************** #
-#                                                                              #
-#                                                         :::      ::::::::    #
-#    main.py                                            :+:      :+:    :+:    #
-#                                                     +:+ +:+         +:+      #
-#    By: smeza-ro <smeza-ro@student.42.fr>          +#+  +:+       +#+         #
-#                                                 +#+#+#+#+#+   +#+            #
-#    Created: 2026/10/14 11:05:12 by smeza-ro          #+#    #+#              #
-#    Updated: 2026/10/14 11:08:45 by smeza-ro         ###   ########.fr        #
-#                                                                              #
-# **************************************************************************** #
 
+import pygame
 from fly_in import ParseError, MapGen, Map, MapError, fly_in, Drone
 
+pygame.init()
+screen = pygame.display.set_mode((800, 600))
+running = True
+while running:
+	for event in pygame.event.get():
+		if event.type == pygame.QUIT:
+			running = False
+
 def main():
-	path = "maps/medium/03_priority_puzzle.txt"
+	path = "maps/challenger/01_the_impossible_dream.txt"
 	try:
+		#pygame.init()
+		#screen = pygame.display.set_mode((800, 600))
+		running = True
 		mymap = MapGen(path).parser()
 		mymap.create_drones()
 		fly_in(mymap.drones)
+		running = True
+		while running:
+			for event in pygame.event.get():
+				if event.type == pygame.QUIT:
+					running = False
 	except ParseError as e:
 		print(f"{e}")
 	except MapError as e:
