@@ -13,7 +13,7 @@
 from fly_in import ParseError, MapGen, Map, MapError, fly_in, Drone
 
 def main():
-	path = "maps/hard/03_ultimate_challenge.txt"
+	path = "maps/medium/03_priority_puzzle.txt"
 	try:
 		mymap = MapGen(path).parser()
 		mymap.create_drones()

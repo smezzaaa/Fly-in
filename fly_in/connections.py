@@ -7,7 +7,7 @@ class Connection:
         self.max_c = 1
         self.capacity = 0
         #self.available = True
-        self.status = []
+        self.status = {}
         self.data = data or []
 
     def check_data(self, msg):
@@ -27,6 +27,16 @@ class Connection:
             raise ParseError(f"{msg} invalid metadata value:"
                             " expected positive int for <max_link_capacity>")
 
+        # Hub e Connection
+    def is_full_at(self, t):
+        return self.status.get(t, 0) >= self.max_c
+
+    def book(self, t):
+        self.status[t] = self.status.get(t, 0) + 1
+
+    def unbook(self, t):           # serve solo per la ricerca locale
+        self.status[t] -= 1
+
     def extract_data(self):
         if not self.data:
             return
@@ -37,10 +47,3 @@ class Connection:
         if self.capacity == self.max_c:
             self.available = False
         return self.available
-
-    def exit_drone(self):
-        self.capacity -= 1
-
-    def add_drone(self):
-        self.capacity += 1
-        return self.capacity

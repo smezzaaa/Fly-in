@@ -19,7 +19,7 @@ class Map:
         self.connections: list[Connection] = connections
 
     def create_drones(self):
-        for i in range (0, self.nb_drones):
+        for i in range (1, self.nb_drones + 1):
             self.drones.append(Drone(self.start, self.end, i, self.start.coord, (0, self.start)))
 
     def initialize_hub_cost(self):

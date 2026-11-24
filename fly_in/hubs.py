@@ -14,9 +14,7 @@ class Hub:
         self.color = "none"
         self.zone = "normal"
         self.max_c = 1
-        self.capacity = 0
-        #self.available = True
-        self.status = []
+        self.status = {}
         self.data = data or []
         self.connection = set()
         self.n_hubs = set()
@@ -70,27 +68,24 @@ class Hub:
         n.n_hubs.add(self)
         n.connection.add(connection)
 
-    def is_full_at(self, turn):
-        if not self.status:
-            return False
-        for t in self.status:
-            if not turn in t or self.capacity < self.max_c:
-                return False
-        return True
+    def is_full_at(self, t):
+        return self.status.get(t, 0) >= self.max_c
 
-    def exit_drone(self):
-        self.capacity -= 1
+    def book(self, t):
+        self.status[t] = self.status.get(t, 0) + 1
 
-    def add_drone(self):
-        self.capacity += 1
-        return self.capacity
+    def unbook(self, t):           # serve solo per la ricerca locale
+        self.status[t] -= 1
 
     def get_connection(self, neighbour):
         for c in self.connection:
             if c.a == neighbour or c.b == neighbour:
                 return c
+        raise MapError(f"[ERROR] connection <{self.name}-{neighbour.name}> not found")
+        return None
 
-    def get_cost(self):
+    def get_cost(self, g_costs, t):
+        self.g_cost = g_costs[(self, t)]
         return self.g_cost + self.h_cost + self.t_cost
 
     def get_neighbour(self):
